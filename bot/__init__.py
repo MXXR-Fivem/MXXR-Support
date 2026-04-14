@@ -1,0 +1,1 @@
+"""MXXR Discord bot package."""

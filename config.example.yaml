@@ -1,0 +1,75 @@
+environment: development
+
+branding:
+  shop_name: "MXXR Store"
+  primary_color: "#386bff"
+  footer_text: "MXXR • Official FiveM Store"
+  footer_icon_url: "https://example.com/logo.png"
+  support_url: "https://discord.gg/change_me"
+  tebex_url: "https://example.tebex.io"
+  website_url: "https://example.com"
+  discord_invite_url: "https://discord.gg/change_me"
+  x_url: "https://x.com/example"
+  youtube_url: "https://www.youtube.com/@example"
+  tiktok_url: "https://www.tiktok.com/@example"
+
+channels:
+  logs: 123456789012345678
+  reviews: 123456789012345679
+  news: 123456789012345680
+  pub_rp: 123456789012345681
+  tickets_category: 123456789012345682
+  tickets_logs: 123456789012345683
+
+roles:
+  staff_bot:
+    - 123456789012345684
+  ban_authorized:
+    - 123456789012345685
+  customer:
+    - 123456789012345686
+  moderation_exemptions:
+    - 123456789012345687
+  ticket_support:
+    - 123456789012345688
+
+tickets:
+  panel_channel_id: 123456789012345689
+  max_open_tickets_per_user: 1
+  mention_support_roles: true
+  transcript_enabled: true
+  categories:
+    - key: achat
+      label: "Aide achat"
+      emoji: "🛒"
+      description: "Question avant ou après un achat"
+    - key: bug
+      label: "Support technique"
+      emoji: "🛠️"
+      description: "Problème de script ou configuration"
+    - key: partenariat
+      label: "Partenariat"
+      emoji: "🤝"
+      description: "Demande de partenariat ou collaboration"
+
+giveaways:
+  default_duration_minutes: 60
+  check_interval_seconds: 30
+
+polls:
+  max_options: 5
+  default_duration_minutes: 60
+
+moderation:
+  delete_discord_invites: true
+  log_deleted_messages: true
+
+ban_protection:
+  max_bans_per_window: 5
+  window_minutes: 60
+  alert_channel_id: 123456789012345690
+
+presence:
+  enabled: true
+  refresh_interval_minutes: 15
+  template: "{sales} ventes | {customers} clients"
