@@ -1,5 +1,10 @@
 .git
 .gitignore
+.env
+.env.*
+!.env.example
+!deploy/docker/.env.api.example
+config.yaml
 .pytest_cache
 .venv
 __pycache__/

@@ -85,6 +85,8 @@ class PublicCog(commands.Cog):
         assert container is not None
         if interaction.guild is None or not isinstance(interaction.user, discord.Member):
             raise app_commands.CheckFailure("Cette commande doit être utilisée dans le serveur.")
+        if not has_staff_permissions(interaction, container.config.roles.staff_bot):
+            raise app_commands.CheckFailure("Vous n'avez pas la permission d'utiliser cette commande.")
         await interaction.response.send_message(
             embed=build_debug_perms_embed(container, interaction.user),
             ephemeral=True,
