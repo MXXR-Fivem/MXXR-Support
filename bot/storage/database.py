@@ -975,24 +975,6 @@ class Database:
         row = await cursor.fetchone()
         return int(row["total"]) if row else 0
 
-    async def has_social_post(self, platform: str, external_id: str) -> bool:
-        """Check whether a social post was already announced previously.
-
-        ## Parameters
-            - platform: Social network source key.
-            - external_id: Upstream content identifier.
-
-        ## Returns
-            True when the post was already announced.
-        """
-
-        assert self.connection is not None
-        cursor = await self.connection.execute(
-            "SELECT 1 FROM social_posts WHERE platform = ? AND external_id = ? LIMIT 1",
-            (platform, external_id),
-        )
-        return await cursor.fetchone() is not None
-
     async def store_social_post(self, platform: str, external_id: str, published_at: datetime) -> None:
         """Persist a social post as already announced to avoid duplicates.
 

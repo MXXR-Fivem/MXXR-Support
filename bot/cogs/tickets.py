@@ -24,6 +24,7 @@ class TicketsCog(commands.Cog):
         assert container is not None
         if interaction.guild is None or not isinstance(interaction.user, discord.Member):
             raise RuntimeError("Guild member context is required.")
+        await interaction.response.defer(ephemeral=True)
 
         try:
             ticket, channel = await container.tickets.create_ticket(
@@ -33,7 +34,7 @@ class TicketsCog(commands.Cog):
                 reason=reason,
             )
         except ValueError as error:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 embed=container.embeds.error("Impossible de créer le ticket", str(error)),
                 ephemeral=True,
             )
@@ -47,7 +48,7 @@ class TicketsCog(commands.Cog):
         log_embed = await container.tickets.build_log_embed(ticket=ticket, author=interaction.user)
         await container.tickets.send_log_embed(interaction.guild, log_embed)
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=container.embeds.success("Ticket créé", f"Votre ticket a été créé: {channel.mention}"),
             ephemeral=True,
         )
@@ -57,9 +58,10 @@ class TicketsCog(commands.Cog):
         container = self.bot.container
         assert container is not None
         await self._enforce_staff(interaction)
+        await interaction.response.defer(ephemeral=True)
         embed = build_ticket_panel_embed(container)
         await interaction.channel.send(embed=embed, view=TicketPanelView())
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=container.embeds.success("Panneau publié", "Le panneau de tickets a été publié."),
             ephemeral=True,
         )

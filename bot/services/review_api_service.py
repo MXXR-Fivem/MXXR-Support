@@ -28,7 +28,8 @@ class ReviewApiService:
         if not self.enabled():
             return
 
-        app = web.Application(middlewares=[self._auth_middleware])
+        app = web.Application(middlewares=[self._cors_middleware, self._auth_middleware])
+        app.router.add_get("/healthz", self.get_health)
         app.router.add_get("/api/reviews/random", self.get_random_reviews)
         self.runner = web.AppRunner(app)
         await self.runner.setup()
@@ -52,11 +53,36 @@ class ReviewApiService:
 
     @web.middleware
     async def _auth_middleware(self, request: web.Request, handler):
+        if request.method == "OPTIONS":
+            return web.Response(status=204)
+        if request.path == "/healthz":
+            return await handler(request)
+
         expected_token = self.settings.review_api_bearer_token
         authorization = request.headers.get("Authorization", "")
         if expected_token is None or authorization != f"Bearer {expected_token}":
             return web.json_response({"error": "unauthorized"}, status=401)
         return await handler(request)
+
+    @web.middleware
+    async def _cors_middleware(self, request: web.Request, handler):
+        response = await handler(request)
+        origin = request.headers.get("Origin")
+        if not origin:
+            return response
+
+        if origin not in self.settings.review_api_allowed_origins:
+            return response
+
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Max-Age"] = "86400"
+        return response
+
+    async def get_health(self, request: web.Request) -> web.Response:
+        return web.json_response({"status": "ok"})
 
     async def get_random_reviews(self, request: web.Request) -> web.Response:
         raw_limit = request.query.get("limit", "5")

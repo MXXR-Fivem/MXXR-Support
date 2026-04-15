@@ -53,7 +53,6 @@ class TicketCategoryConfig(BaseModel):
 
 
 class TicketsConfig(BaseModel):
-    panel_channel_id: int | None = None
     max_open_tickets_per_user: int = 1
     categories: list[TicketCategoryConfig] = Field(default_factory=list)
     mention_support_roles: bool = True
@@ -61,18 +60,15 @@ class TicketsConfig(BaseModel):
 
 
 class GiveawaysConfig(BaseModel):
-    default_duration_minutes: int = 60
     check_interval_seconds: int = 30
 
 
 class PollsConfig(BaseModel):
     max_options: int = 5
-    default_duration_minutes: int = 60
 
 
 class ModerationConfig(BaseModel):
     delete_discord_invites: bool = True
-    log_deleted_messages: bool = True
 
 
 class BanProtectionConfig(BaseModel):

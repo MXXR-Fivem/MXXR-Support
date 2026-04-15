@@ -1,0 +1,39 @@
+services:
+  bot-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: mxxr-bot-api
+    restart: unless-stopped
+    command: ["python", "-m", "bot.api_main"]
+    env_file:
+      - ./docker/.env.api
+    ports:
+      - "${BOT_API_BIND_IP:-0.0.0.0}:${BOT_API_PORT:-8082}:8081"
+    volumes:
+      - ../data:/app/data
+      - ../config.yaml:/app/config.yaml:ro
+    networks:
+      - bot_api_net
+
+  discord-bot:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: mxxr-discord-bot
+    restart: unless-stopped
+    profiles:
+      - bot-runtime
+    env_file:
+      - ../.env
+    command: ["python", "-m", "bot.main"]
+    volumes:
+      - ../data:/app/data
+      - ../config.yaml:/app/config.yaml:ro
+    networks:
+      - bot_api_net
+
+networks:
+  bot_api_net:
+    name: mxxr_bot_api_net
+    driver: bridge

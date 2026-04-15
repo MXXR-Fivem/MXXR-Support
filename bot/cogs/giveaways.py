@@ -39,6 +39,7 @@ class GiveawaysCog(commands.Cog):
                 ephemeral=True,
             )
             return
+        await interaction.response.defer(ephemeral=True)
         giveaway = build_giveaway_record(
             guild_id=interaction.guild_id,
             channel_id=interaction.channel_id,
@@ -54,7 +55,7 @@ class GiveawaysCog(commands.Cog):
             view=GiveawayJoinView(),
         )
         await container.database.set_giveaway_message(int(giveaway.id), message.id)
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=container.embeds.success("Giveaway créé", f"Le giveaway a été publié dans {interaction.channel.mention}."),
             ephemeral=True,
         )

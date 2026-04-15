@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class ReviewModal(discord.ui.Modal, title="Laisser un avis"):
     scripts = discord.ui.TextInput(
         label="Scripts achetés",
-        placeholder="Ex: mxxr_inventory, mxxr_banking",
+        placeholder="Ex: MXXR_Garage, MXXR_Society",
         max_length=200,
     )
     rating = discord.ui.TextInput(

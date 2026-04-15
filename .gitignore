@@ -16,3 +16,4 @@ config.yaml
 .mypy_cache/
 .ruff_cache/
 .python-version
+node_modules/

@@ -65,15 +65,6 @@ class PollRecord(BaseModel):
     ended_at: datetime | None = None
 
 
-class SocialPost(BaseModel):
-    platform: str
-    external_id: str
-    title: str
-    url: str
-    summary: str | None = None
-    published_at: datetime
-
-
 class TebexPaymentRecord(BaseModel):
     id: int
     status: str

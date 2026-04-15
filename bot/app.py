@@ -7,6 +7,7 @@ from pathlib import Path
 import discord
 import httpx
 from discord import app_commands
+from discord.errors import NotFound
 from discord.ext import commands
 
 from bot.cogs.giveaways import GiveawaysCog
@@ -165,10 +166,16 @@ class ShopBot(commands.Bot):
                 "Erreur",
                 "Une erreur inattendue est survenue pendant l'exécution de la commande.",
             )
-        if interaction.response.is_done():
-            await interaction.followup.send(embed=embed, ephemeral=True)
-        else:
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+        try:
+            if interaction.response.is_done():
+                await interaction.followup.send(embed=embed, ephemeral=True)
+            else:
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+        except NotFound:
+            logger.warning(
+                "Could not send application command error response for interaction %s because it expired.",
+                interaction.id,
+            )
 
     async def _build_container(self, settings: EnvironmentSettings) -> BotContainer:
         config = load_app_config(settings.config_path)

@@ -47,6 +47,7 @@ class PollsCog(commands.Cog):
                 ephemeral=True,
             )
             return
+        await interaction.response.defer(ephemeral=True)
         poll = build_poll_record(
             guild_id=interaction.guild_id,
             channel_id=interaction.channel_id,
@@ -62,7 +63,7 @@ class PollsCog(commands.Cog):
             view=PollVoteView(option_count=len(parsed_options)),
         )
         await container.database.set_poll_message(int(poll.id), message.id)
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=container.embeds.success("Sondage créé", "Le sondage a été publié."),
             ephemeral=True,
         )

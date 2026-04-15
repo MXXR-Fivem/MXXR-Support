@@ -25,10 +25,11 @@ class ReviewsCog(commands.Cog):
         if interaction.guild is None:
             raise app_commands.CheckFailure("Cette commande doit être utilisée dans le serveur.")
 
+        await interaction.response.defer(ephemeral=True)
         published = await container.reviews.publish_review_panel(interaction.guild)
         if not published:
             raise app_commands.AppCommandError("Le bot n'a pas pu publier le panel d'avis dans le salon configuré.")
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=container.embeds.success("Panneau publié", "Le panneau d'avis a été publié dans le salon d'avis."),
             ephemeral=True,
         )

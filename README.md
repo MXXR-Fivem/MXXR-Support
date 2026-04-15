@@ -18,7 +18,7 @@ Le thème visuel par défaut du projet est aligné sur la boutique `https://mxxr
 
 ## Fonctionnalités
 - Commandes publiques: `/help`, `/avatar`, `/info`, `/ping`
-- Commandes staff: `/help-admin`, `/ticket-panel`, `/social-post`, `/review-panel`, `/review-import-channel`, `/review-clean-backfill`, `/review-translate-backfill`, `/review-delete`, `/giveaway-create`, `/giveaway-reroll`, `/poll-create`, `/ban`, `/clear`
+- Commandes staff: `/help-admin`, `/ticket-panel`, `/social-post`, `/tebex-info`, `/script-info`, `/script-update`, `/review-panel`, `/review-import-channel`, `/review-clean-backfill`, `/review-translate-backfill`, `/review-delete`, `/giveaway-create`, `/giveaway-reroll`, `/poll-create`, `/ban`, `/clear`
 - Tickets:
   - création via bouton ou `/ticket-create`
   - catégories configurables
@@ -52,7 +52,7 @@ Le thème visuel par défaut du projet est aligné sur la boutique `https://mxxr
 - Réseaux sociaux:
   - publication manuelle via `/social-post`
   - embed uniforme pour YouTube, X et TikTok
-  - plus aucune clé API réseau requise par le bot
+  - aucune intégration de fetch automatique, uniquement du post manuel
 - Modération:
   - suppression des invites Discord hors salon autorisé
   - exemptions de rôles
@@ -106,6 +106,12 @@ cp config.example.yaml config.yaml
 python -m bot.main
 ```
 
+API d’avis seule:
+
+```bash
+python -m bot.api_main
+```
+
 ## Variables d’environnement
 - `DISCORD_TOKEN`: token du bot
 - `DISCORD_CLIENT_ID`: application ID Discord
@@ -116,6 +122,7 @@ python -m bot.main
 - `REVIEW_API_HOST`: hôte d’écoute de l’API d’avis, par défaut `127.0.0.1`
 - `REVIEW_API_PORT`: port d’écoute de l’API d’avis, par défaut `8081`
 - `REVIEW_API_BEARER_TOKEN`: token Bearer requis pour l’API d’avis
+- `REVIEW_API_ALLOWED_ORIGINS`: liste séparée par des virgules des origines autorisées pour le CORS navigateur
 - `DEEPL_API_BASE_URL`: base URL DeepL, par défaut `https://api-free.deepl.com`
 - `DEEPL_API_KEY`: clé DeepL API Free pour traduire les avis en anglais
 - `TRANSLATION_API_BASE_URL`: base URL d’une API de traduction compatible OpenAI Chat Completions
@@ -180,22 +187,22 @@ Tables SQLite actuelles:
 ## API avis
 - Route: `GET /api/reviews/random?limit=6`
 - Header requis: `Authorization: Bearer <token>`
+- CORS: si l’API est appelée depuis un front navigateur, définir `REVIEW_API_ALLOWED_ORIGINS` avec les domaines autorisés
 - Réponse: avis aléatoires avec `author_name`, `scripts`, `rating`, `comment_fr`, `comment_en`, `created_at`
+
+## Déploiement Docker isolé
+- Stack Docker dédiée: `deploy/docker-compose.bot-stack.yml`
+- Runtime API seul: `python -m bot.api_main`
+- Documentation d’exploitation: `deploy/README.md`
 
 ## TODO honnêtes
 - Ajouter un export transcript HTML ou Markdown plus riche si souhaité.
 - Ajouter une vraie synchronisation persistante des vues de sondage si tu veux aussi reconstruire dynamiquement tous les messages actifs après redémarrage avec leur état exact.
-- TikTok:
-  - le projet fournit volontairement une abstraction basée sur un flux JSON externe
-  - pour une intégration production complète, il faut brancher un fournisseur fiable côté boutique ou un bridge interne
-- X:
-  - l’implémentation suppose un accès API v2 valide
-  - selon ton abonnement API, certains endpoints peuvent être restreints
 
 ## Fichiers principaux
-- [`bot/main.py`](/home/theo/Projets_perso/mxxr_discord_bot/bot/main.py)
-- [`bot/app.py`](/home/theo/Projets_perso/mxxr_discord_bot/bot/app.py)
-- [`bot/services/tebex_client.py`](/home/theo/Projets_perso/mxxr_discord_bot/bot/services/tebex_client.py)
-- [`bot/services/tebex_service.py`](/home/theo/Projets_perso/mxxr_discord_bot/bot/services/tebex_service.py)
-- [`bot/storage/database.py`](/home/theo/Projets_perso/mxxr_discord_bot/bot/storage/database.py)
-- [`bot/embeds/factory.py`](/home/theo/Projets_perso/mxxr_discord_bot/bot/embeds/factory.py)
+- [bot/main.py](/home/ubuntu/MXXR-Support/bot/main.py)
+- [bot/app.py](/home/ubuntu/MXXR-Support/bot/app.py)
+- [bot/services/tebex_client.py](/home/ubuntu/MXXR-Support/bot/services/tebex_client.py)
+- [bot/services/tebex_service.py](/home/ubuntu/MXXR-Support/bot/services/tebex_service.py)
+- [bot/storage/database.py](/home/ubuntu/MXXR-Support/bot/storage/database.py)
+- [bot/embeds/factory.py](/home/ubuntu/MXXR-Support/bot/embeds/factory.py)

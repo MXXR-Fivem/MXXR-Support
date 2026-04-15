@@ -11,6 +11,11 @@ from bot.commands.public.debug_perms import build_debug_perms_embed
 from bot.commands.public.help import build_help_embed
 from bot.commands.public.info import build_info_embed
 from bot.commands.public.ping import build_ping_embed
+from bot.commands.staff.announcements import (
+    build_script_info_embed,
+    build_script_update_embed,
+    build_tebex_info_embed,
+)
 from bot.commands.staff.help import build_staff_help_embed
 from bot.commands.staff.social import PLATFORM_LABELS, SocialPlatform, build_social_post_embed
 from bot.guards.checks import has_staff_permissions
@@ -23,6 +28,22 @@ if TYPE_CHECKING:
 class PublicCog(commands.Cog):
     def __init__(self, bot: ShopBot) -> None:
         self.bot = bot
+
+    @staticmethod
+    def _is_http_url(value: str) -> bool:
+        return value.startswith("http://") or value.startswith("https://")
+
+    @staticmethod
+    def _resolve_target_channel(
+        interaction: discord.Interaction,
+        channel: discord.TextChannel | None,
+    ) -> discord.TextChannel:
+        target_channel = channel
+        if target_channel is None and isinstance(interaction.channel, discord.TextChannel):
+            target_channel = interaction.channel
+        if not isinstance(target_channel, discord.TextChannel):
+            raise app_commands.AppCommandError("Le salon cible est introuvable ou n'est pas textuel.")
+        return target_channel
 
     @app_commands.command(name="help", description="Affiche les commandes principales du bot")
     async def help_command(self, interaction: discord.Interaction) -> None:
@@ -125,6 +146,108 @@ class PublicCog(commands.Cog):
             embed=container.embeds.success(
                 "Post publié",
                 f"Le post {PLATFORM_LABELS[platform_key]} a été publié dans {target_channel.mention}.",
+            ),
+            ephemeral=True,
+        )
+
+    @app_commands.command(name="tebex-info", description="Publie les instructions Tebex dans un salon")
+    @app_commands.describe(channel="Salon cible, sinon le salon actuel")
+    async def tebex_info_command(
+        self,
+        interaction: discord.Interaction,
+        channel: discord.TextChannel | None = None,
+    ) -> None:
+        container = self.bot.container
+        assert container is not None
+        if not has_staff_permissions(interaction, container.config.roles.staff_bot):
+            raise app_commands.CheckFailure("Vous n'avez pas la permission d'utiliser cette commande.")
+        if interaction.guild is None:
+            raise app_commands.CheckFailure("Cette commande doit être utilisée dans le serveur.")
+
+        target_channel = self._resolve_target_channel(interaction, channel)
+        await target_channel.send(
+            content="@everyone",
+            embed=build_tebex_info_embed(container),
+            allowed_mentions=discord.AllowedMentions(everyone=True),
+        )
+        await interaction.response.send_message(
+            embed=container.embeds.success(
+                "Informations Tebex publiées",
+                f"L'embed Tebex a été envoyé dans {target_channel.mention}.",
+            ),
+            ephemeral=True,
+        )
+
+    @app_commands.command(name="script-info", description="Publie la fiche d'information d'un script")
+    @app_commands.describe(
+        title="Titre affiché dans l'embed",
+        video_url="Lien de la vidéo de présentation",
+        tebex_url="Lien Tebex du script",
+        doc_url="Lien de documentation optionnel",
+        channel="Salon cible, sinon le salon actuel",
+    )
+    async def script_info_command(
+        self,
+        interaction: discord.Interaction,
+        title: app_commands.Range[str, 1, 256],
+        video_url: app_commands.Range[str, 1, 1000],
+        tebex_url: app_commands.Range[str, 1, 1000],
+        doc_url: app_commands.Range[str, 1, 1000] | None = None,
+        channel: discord.TextChannel | None = None,
+    ) -> None:
+        container = self.bot.container
+        assert container is not None
+        if not has_staff_permissions(interaction, container.config.roles.staff_bot):
+            raise app_commands.CheckFailure("Vous n'avez pas la permission d'utiliser cette commande.")
+        if interaction.guild is None:
+            raise app_commands.CheckFailure("Cette commande doit être utilisée dans le serveur.")
+        if not self._is_http_url(video_url):
+            raise app_commands.AppCommandError("Le lien vidéo doit commencer par `http://` ou `https://`.")
+        if not self._is_http_url(tebex_url):
+            raise app_commands.AppCommandError("Le lien Tebex doit commencer par `http://` ou `https://`.")
+        if doc_url is not None and not self._is_http_url(doc_url):
+            raise app_commands.AppCommandError("Le lien de documentation doit commencer par `http://` ou `https://`.")
+
+        target_channel = self._resolve_target_channel(interaction, channel)
+        await target_channel.send(embed=build_script_info_embed(container, title, video_url, tebex_url, doc_url))
+        await interaction.response.send_message(
+            embed=container.embeds.success(
+                "Fiche script publiée",
+                f"L'embed du script a été envoyé dans {target_channel.mention}.",
+            ),
+            ephemeral=True,
+        )
+
+    @app_commands.command(name="script-update", description="Publie un embed de nouveautes pour un script")
+    @app_commands.describe(
+        title="Titre de la mise a jour",
+        updates="Texte des nouveautes ou changements",
+        video_url="Lien video optionnel de la mise a jour",
+        channel="Salon cible, sinon le salon actuel",
+    )
+    async def script_update_command(
+        self,
+        interaction: discord.Interaction,
+        title: app_commands.Range[str, 1, 256],
+        updates: app_commands.Range[str, 1, 4000],
+        video_url: app_commands.Range[str, 1, 1000] | None = None,
+        channel: discord.TextChannel | None = None,
+    ) -> None:
+        container = self.bot.container
+        assert container is not None
+        if not has_staff_permissions(interaction, container.config.roles.staff_bot):
+            raise app_commands.CheckFailure("Vous n'avez pas la permission d'utiliser cette commande.")
+        if interaction.guild is None:
+            raise app_commands.CheckFailure("Cette commande doit être utilisée dans le serveur.")
+        if video_url is not None and not self._is_http_url(video_url):
+            raise app_commands.AppCommandError("Le lien video doit commencer par `http://` ou `https://`.")
+
+        target_channel = self._resolve_target_channel(interaction, channel)
+        await target_channel.send(embed=build_script_update_embed(container, title, updates, video_url))
+        await interaction.response.send_message(
+            embed=container.embeds.success(
+                "Mise a jour publiee",
+                f"L'embed de mise a jour a ete envoye dans {target_channel.mention}.",
             ),
             ephemeral=True,
         )
