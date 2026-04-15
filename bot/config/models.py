@@ -79,6 +79,7 @@ class BanProtectionConfig(BaseModel):
 
 class PresenceConfig(BaseModel):
     enabled: bool = True
+    switch_interval_seconds: int = 10
     refresh_interval_minutes: int = 15
     template: str = "{sales} ventes | {customers} clients"
 
