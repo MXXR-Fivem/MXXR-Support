@@ -503,6 +503,24 @@ class Database:
         )
         await self.connection.commit()
 
+    async def set_giveaway_winners(self, giveaway_id: int, winner_ids: list[int]) -> None:
+        """Persist an updated winner list for an already finished giveaway.
+
+        ## Parameters
+            - giveaway_id: Giveaway identifier being updated.
+            - winner_ids: Replacement Discord user identifiers.
+
+        ## Returns
+            None.
+        """
+
+        assert self.connection is not None
+        await self.connection.execute(
+            "UPDATE giveaways SET winner_ids = ? WHERE id = ?",
+            (json.dumps(winner_ids), giveaway_id),
+        )
+        await self.connection.commit()
+
     async def save_review(self, review: ReviewRecord) -> int:
         """Persist a customer review entry in the database.
 

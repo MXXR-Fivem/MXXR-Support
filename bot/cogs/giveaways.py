@@ -70,7 +70,19 @@ class GiveawaysCog(commands.Cog):
             raise app_commands.AppCommandError("Giveaway introuvable ou non terminé.")
         winners = await container.giveaways.reroll_giveaway(giveaway)
         participant_count = await container.database.count_giveaway_entries(int(giveaway.id))
-        embed = container.giveaways.build_results_embed(giveaway, winners, participant_count=participant_count)
+        if not winners:
+            embed = container.embeds.warning(
+                "Reroll impossible",
+                "Aucun participant supplémentaire n'est disponible pour relancer ce giveaway.",
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        embed = container.giveaways.build_results_embed(
+            giveaway,
+            winners,
+            participant_count=participant_count,
+            no_winner_reason="Aucun participant supplémentaire n'est disponible pour relancer ce giveaway.",
+        )
         await interaction.response.send_message(embed=embed)
 
     def _ensure_staff(self, interaction: discord.Interaction) -> None:

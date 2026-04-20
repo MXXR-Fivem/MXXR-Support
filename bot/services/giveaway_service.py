@@ -93,7 +93,10 @@ class GiveawayService:
         if not remaining:
             return []
         winner_count = min(giveaway.winner_count, len(remaining))
-        return random.sample(remaining, k=winner_count)
+        winners = random.sample(remaining, k=winner_count)
+        await self.database.set_giveaway_winners(int(giveaway.id), winners)
+        giveaway.winner_ids = winners
+        return winners
 
     def build_giveaway_embed(self, giveaway: GiveawayRecord, participant_count: int = 0) -> discord.Embed:
         """Build the branded embed shown while a giveaway is active.
@@ -118,7 +121,14 @@ class GiveawayService:
         )
         return embed
 
-    def build_results_embed(self, giveaway: GiveawayRecord, winners: list[int], participant_count: int | None = None) -> discord.Embed:
+    def build_results_embed(
+        self,
+        giveaway: GiveawayRecord,
+        winners: list[int],
+        participant_count: int | None = None,
+        *,
+        no_winner_reason: str | None = None,
+    ) -> discord.Embed:
         """Build the branded embed announcing the final giveaway results.
 
         ## Parameters
@@ -134,7 +144,7 @@ class GiveawayService:
             description = "Les gagnants ont été tirés au sort automatiquement."
             winners_value = "\n".join(f"<@{winner}>" for winner in winners)
         else:
-            description = "Personne n'a participé à ce giveaway."
+            description = no_winner_reason or "Personne n'a participé à ce giveaway."
             winners_value = "Aucun participant"
 
         embed = self.embed_factory.giveaway(f"{giveaway.title} • Terminé", description)

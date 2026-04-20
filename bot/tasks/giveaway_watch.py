@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import tasks
 
-from bot.views.giveaway_views import GiveawayJoinView
 from bot.utils.time import utcnow
 
 if TYPE_CHECKING:
@@ -59,34 +58,23 @@ class GiveawayWatcherTask:
                 if giveaway.message_id is not None:
                     try:
                         message = await channel.fetch_message(giveaway.message_id)
-                        await message.edit(
-                            embed=self.container.giveaways.build_results_embed(
-                                giveaway,
-                                winners,
-                                participant_count=participant_count,
-                            ),
-                            view=None,
-                        )
+                        await message.delete()
                     except discord.NotFound:
                         pass
+                results_embed = self.container.giveaways.build_results_embed(
+                    giveaway,
+                    winners,
+                    participant_count=participant_count,
+                )
                 if winners:
                     winners_mentions = " ".join(f"<@{winner}>" for winner in winners)
-                    await channel.send(
+                    result_message = await channel.send(
                         content=f"🎉 Félicitations {winners_mentions}",
-                        embed=self.container.giveaways.build_results_embed(
-                            giveaway,
-                            winners,
-                            participant_count=participant_count,
-                        ),
+                        embed=results_embed,
                     )
                 else:
-                    await channel.send(
-                        embed=self.container.giveaways.build_results_embed(
-                            giveaway,
-                            winners,
-                            participant_count=participant_count,
-                        )
-                    )
+                    result_message = await channel.send(embed=results_embed)
+                await self.container.database.set_giveaway_message(int(giveaway.id), result_message.id)
             except Exception:
                 logger.exception("Failed to end giveaway %s", giveaway.id)
 

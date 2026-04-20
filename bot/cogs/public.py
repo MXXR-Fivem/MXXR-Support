@@ -17,7 +17,12 @@ from bot.commands.staff.announcements import (
     build_tebex_info_embed,
 )
 from bot.commands.staff.help import build_staff_help_embed
-from bot.commands.staff.social import PLATFORM_LABELS, SocialPlatform, build_social_post_embed
+from bot.commands.staff.social import (
+    PLATFORM_LABELS,
+    SocialPlatform,
+    build_social_post_embed,
+    resolve_social_preview_image,
+)
 from bot.guards.checks import has_staff_permissions
 from bot.utils.time import utcnow
 
@@ -37,11 +42,11 @@ class PublicCog(commands.Cog):
     def _resolve_target_channel(
         interaction: discord.Interaction,
         channel: discord.TextChannel | None,
-    ) -> discord.TextChannel:
+    ) -> discord.TextChannel | discord.Thread:
         target_channel = channel
-        if target_channel is None and isinstance(interaction.channel, discord.TextChannel):
+        if target_channel is None and isinstance(interaction.channel, (discord.TextChannel, discord.Thread)):
             target_channel = interaction.channel
-        if not isinstance(target_channel, discord.TextChannel):
+        if not isinstance(target_channel, (discord.TextChannel, discord.Thread)):
             raise app_commands.AppCommandError("Le salon cible est introuvable ou n'est pas textuel.")
         return target_channel
 
@@ -92,13 +97,13 @@ class PublicCog(commands.Cog):
             ephemeral=True,
         )
 
-    @app_commands.command(name="social-post", description="Publie manuellement un post réseau dans le salon news")
+    @app_commands.command(name="social-post", description="Publie manuellement un post réseau dans un salon")
     @app_commands.describe(
         platform="Plateforme concernée",
         title="Titre affiché dans l'embed",
         url="Lien du contenu",
         summary="Résumé optionnel du contenu",
-        channel="Salon cible, sinon le salon news configuré",
+        channel="Salon cible, sinon le salon actuel",
     )
     @app_commands.choices(
         platform=[
@@ -124,16 +129,15 @@ class PublicCog(commands.Cog):
         if not (url.startswith("http://") or url.startswith("https://")):
             raise app_commands.AppCommandError("Le lien doit commencer par `http://` ou `https://`.")
 
-        target_channel = channel or interaction.guild.get_channel(container.config.channels.news)
-        if not isinstance(target_channel, discord.TextChannel):
-            raise app_commands.AppCommandError("Le salon news configuré est introuvable ou n'est pas textuel.")
-
         selected_platform = platform.value
         if selected_platform not in PLATFORM_LABELS:
             raise app_commands.AppCommandError("Plateforme invalide.")
 
+        await interaction.response.defer(ephemeral=True)
+        target_channel = self._resolve_target_channel(interaction, channel)
         platform_key = cast(SocialPlatform, selected_platform)
         published_at = utcnow()
+        preview_image_url = await resolve_social_preview_image(container.http_client, platform_key, url)
         embed = build_social_post_embed(
             container=container,
             platform=platform_key,
@@ -141,10 +145,11 @@ class PublicCog(commands.Cog):
             url=url,
             summary=summary,
             published_at=published_at,
+            preview_image_url=preview_image_url,
         )
         await target_channel.send(embed=embed)
         await container.database.store_social_post(platform_key, url, published_at)
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=container.embeds.success(
                 "Post publié",
                 f"Le post {PLATFORM_LABELS[platform_key]} a été publié dans {target_channel.mention}.",
